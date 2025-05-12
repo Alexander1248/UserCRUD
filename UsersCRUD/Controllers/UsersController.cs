@@ -17,38 +17,16 @@ public class UsersController(UserService service) : ControllerBase
         var token = service.Authenticate(request.Login, request.Password);
         return token == null ? Unauthorized("Invalid credentials.") : Ok(token);
     }
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        var currentUser = GetCurrentUser();
+        if (currentUser is null) return Unauthorized("Current user not authorized!");
+        service.LogOut(currentUser);
+        return Ok("Logged out!");
+    }
     
-    
-    // Create
-    // 1) Создание пользователя по логину, паролю, имени, полу и дате рождения + указание будет ли
-    //     пользователь админом (Доступно Админам)
-    // ++++++++++++
-    // Update-1
-    // 2) Изменение имени, пола или даты рождения пользователя (Может менять Администратор, либо
-    //     лично пользователь, если он активен (отсутствует RevokedOn))
-    // 3) Изменение пароля (Пароль может менять либо Администратор, либо лично пользователь, если
-    //     он активен (отсутствует RevokedOn))
-    // 4) Изменение логина (Логин может менять либо Администратор, либо лично пользователь, если
-    //     он активен (отсутствует RevokedOn), логин должен оставаться уникальным)
-    // Read
-    // 5) Запрос списка всех активных (отсутствует RevokedOn) пользователей, список отсортирован по
-    //     CreatedOn (Доступно Админам)
-    // ++++++++++++
-    // 6) Запрос пользователя по логину, в списке долны быть имя, пол и дата рождения статус активный
-    //     или нет (Доступно Админам)
-    // ++++++++++++
-    // 7) Запрос пользователя по логину и паролю (Доступно только самому пользователю, если он
-    //     активен (отсутствует RevokedOn))
-    // ++++++++++++
-    // 8) Запрос всех пользователей старше определённого возраста (Доступно Админам)
-    // ++++++++++++
-    // Delete
-    // 9) Удаление пользователя по логину полное или мягкое (При мягком удалении должна
-    //     происходить простановка RevokedOn и RevokedBy) (Доступно Админам)
-    // ++++++++++++
-    // Update-2
-    // 10) Восстановление пользователя - Очистка полей (RevokedOn, RevokedBy) (Доступно Админам)
-    // ++++++++++++
     
     // Admins only
     [HttpGet("get/active")]
@@ -128,13 +106,32 @@ public class UsersController(UserService service) : ControllerBase
         var currentUser = GetCurrentUser();
         if (currentUser is null) return Unauthorized("Current user not authorized!");
         if (!currentUser.Admin) return Forbid("Current user not admin!");
-        if (!service.RevokeUser(login, currentUser.Login))
+        if (!service.RestoreUser(login))
             return BadRequest("User not found!");
         return Ok("User was restored!");
     }
     
-    // Users and admins
-    
+    [HttpPatch("update/{login}")]
+    public IActionResult UpdateAdmin(string login, [FromBody] UserUpdateDto data)
+    {
+        var currentUser = GetCurrentUser();
+        if (currentUser is null) return Unauthorized("Current user not authorized!");
+        if (!currentUser.Admin) return Forbid("Current user not admin!");
+        
+        var user = service.Users.FirstOrDefault(u => u.Login == login);
+        if (user == null) return NotFound("User not found!");
+        
+        if (data.Name is not null) user.Name = data.Name;
+        if (data.Login is not null)
+        {
+            service.LogOut(user);
+            user.Login = data.Login;
+        }
+        if (data.Password is not null) service.SetPassword(user, data.Password);
+        if (data.Birthday is not null) user.Birthday = data.Birthday;
+        if (data.Gender.HasValue) user.Gender = data.Gender.Value;
+        return Ok("User was updated!");
+    }
     
     // Users only
     [HttpGet("get/current")]
@@ -151,5 +148,24 @@ public class UsersController(UserService service) : ControllerBase
             Birthday = currentUser.Birthday,
             Active = currentUser.RevokedOn == null
         });
+    }
+    
+    [HttpPatch("update")]
+    public IActionResult Update([FromBody] UserUpdateDto data)
+    {
+        var currentUser = GetCurrentUser();
+        if (currentUser is null) return Unauthorized("Current user not authorized!");
+        if (currentUser.RevokedOn is not null) return Forbid("User revoked!");
+        
+        if (data.Name is not null) currentUser.Name = data.Name;
+        if (data.Login is not null)
+        {
+            service.LogOut(currentUser);
+            currentUser.Login = data.Login;
+        }
+        if (data.Password is not null) service.SetPassword(currentUser, data.Password);
+        if (data.Birthday is not null) currentUser.Birthday = data.Birthday;
+        if (data.Gender.HasValue) currentUser.Gender = data.Gender.Value;
+        return Ok("User was updated!");
     }
 }

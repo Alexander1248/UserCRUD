@@ -35,7 +35,7 @@ GET {{host}}/users/get/active
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### Список пользователей старше 
+### Список пользователей старше определенного возраста
 # @name older
 GET {{host}}/users/get/older?age=10
 Content-Type: application/json
@@ -53,21 +53,63 @@ GET {{host}}/users/get/current
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### Получить данные текущего пользователя
+### Удалить пользователя мягко
 # @name delete user soft
 DELETE {{host}}/users/delete/{{login}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### Получить данные текущего пользователя
+### Восстановить пользователя
 # @name restore user
 POST {{host}}/users/restore/{{login}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### Получить данные текущего пользователя
+### Изменить имя от лица админа
+# @name update data as admin
+PATCH {{host}}/users/update/{{login}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "New Name",
+  "password": "34567",
+  "login": "test2",
+  "gender": 2,
+  "birthday": "2003-05-01T14:43:10.3398853Z"
+}
+
+### Авторизация пользователя
+# @name auth user
+POST {{host}}/users/auth
+Content-Type: application/json
+
+{
+  "login": "test2",
+  "password": "34567"
+}
+
+> {%
+    client.global.set("token_user", response.body);
+%}
+
+### Изменить имя
+# @name update data
+PATCH {{host}}/users/update
+Content-Type: application/json
+Authorization: Bearer {{token_user}}
+
+{
+  "name": "Another Name",
+  "password": "12345",
+  "login": "test3",
+  "gender": 0,
+  "birthday": "2007-11-24T14:43:10.3398853Z"
+}
+
+### Удалить пользователя жестко
 # @name delete user hard
-DELETE {{host}}/users/delete/{{login}}?hard
+DELETE {{host}}/users/delete/test3?hard=true
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

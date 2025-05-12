@@ -41,6 +41,8 @@ public class UserService
         users.Add(user);
         return user;
     }
+    public void SetPassword(User user, string newPassword) =>
+        user.Password = Hasher.HashPassword(user, newPassword);
     
     public void DeleteUser(string login) => users.RemoveAll(x => x.Login == login);
 
@@ -75,6 +77,7 @@ public class UserService
         return token;
     }
     
+    public void LogOut(User user) => Tokens.Remove(user.Login);
 
     public User? GetUserByToken(string token)
     {
