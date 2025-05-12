@@ -1,6 +1,29 @@
-@UsersCRUD_HostAddress = http://localhost:5227
+@host = http://localhost:5227
 
-GET {{UsersCRUD_HostAddress}}/weatherforecast/
-Accept: application/json
+### Авторизация (получение токена)
+# @name auth
+POST {{host}}/users/auth
+Content-Type: application/json
 
-###
+{
+    "login": "admin",
+    "password": "12345"
+}
+
+> {%
+    client.global.set("token", response.body);
+%}
+### Создание нового пользователя
+# @name create
+
+POST {{host}}/users/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "login": "test1",
+  "password":"12345",
+  "name": "Test User",
+  "gender": 0,
+  "birthday": "2013-04-17T14:43:10.3398853Z"
+}

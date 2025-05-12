@@ -18,6 +18,7 @@ public class UserService
             new CreateUserDto{
                 Login = "admin",
                 Name = "Admin",
+                Password = "12345",
                 Gender = Gender.Unknown,
                 Admin = true
             }, 

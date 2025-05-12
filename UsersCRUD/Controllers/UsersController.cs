@@ -6,7 +6,7 @@ using UsersCRUD.Services;
 namespace UsersCRUD.Controllers;
 
 [ApiController]
-[Route("users/[controller]")]
+[Route("users")]
 public class UsersController(UserService service) : ControllerBase
 {
     private User? GetCurrentUser() => service.GetUserByToken(Request.Headers.Authorization.ToString());
@@ -27,12 +27,19 @@ public class UsersController(UserService service) : ControllerBase
 
         var user = service.Users.FirstOrDefault(u => u.Login == login);
         if (user == null) return NotFound("User not found!");
-        return Ok(new
+        return Ok(new GetUserDto
         {
-            user.Name,
-            user.Gender,
-            user.Birthday,
-            Active = user.RevokedOn == null
+            Login = user.Login,
+            Name = user.Name,
+            Gender = user.Gender,
+            Birthday = user.Birthday,
+            Admin = user.Admin,
+            Active = user.RevokedOn == null,
+            CreatedOn = user.CreatedOn,
+            CreatedBy = user.CreatedBy,
+            ModifiedOn = user.ModifiedOn,
+            ModifiedBy = user.ModifiedBy,
+            RevokedBy = user.RevokedBy
         });
     }
     
@@ -48,7 +55,20 @@ public class UsersController(UserService service) : ControllerBase
             return BadRequest("User with such login already exists!");
 
         var user = service.AddUser(dto, currentUser.Login);
-        return CreatedAtAction(nameof(GetUserByLogin), new { login = user.Login }, user);
+        return CreatedAtAction(nameof(GetUserByLogin), new { login = user.Login }, new GetUserDto
+        {
+            Login = user.Login,
+            Name = user.Name,
+            Gender = user.Gender,
+            Birthday = user.Birthday,
+            Admin = user.Admin,
+            Active = user.RevokedOn == null,
+            CreatedOn = user.CreatedOn,
+            CreatedBy = user.CreatedBy,
+            ModifiedOn = user.ModifiedOn,
+            ModifiedBy = user.ModifiedBy,
+            RevokedBy = user.RevokedBy
+        });
     }
     
     // Users and admins

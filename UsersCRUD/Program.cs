@@ -9,5 +9,5 @@ var app = builder.Build();
 app.UseSwagger();
 app.MapControllers();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.Run();

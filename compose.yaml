@@ -1,0 +1,7 @@
+﻿services:
+  userscrud:
+    image: userscrud
+    build:
+      context: .
+      dockerfile: UsersCRUD/Dockerfile
+

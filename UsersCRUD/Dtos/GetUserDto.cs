@@ -1,11 +1,10 @@
-﻿namespace UsersCRUD.Models;
+using UsersCRUD.Models;
 
-public enum Gender { Female = 0, Male = 1, Unknown = 2 }
+namespace UsersCRUD.Dtos;
 
-public class User
+public class GetUserDto
 {
     public string Login { get; set; } = "null";
-    public string Password { get; set; } =  "";
     public string Name { get; set; } =  "Unknown";
     public Gender Gender { get; set; }
     public DateTime? Birthday { get; set; }
@@ -15,6 +14,6 @@ public class User
     public string CreatedBy { get; set; } =  "system";
     public DateTime? ModifiedOn { get; set; }
     public string? ModifiedBy { get; set; }
-    public DateTime? RevokedOn { get; set; }
+    public bool Active { get; set; }
     public string? RevokedBy { get; set; }
 }
