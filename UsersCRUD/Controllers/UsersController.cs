@@ -82,7 +82,7 @@ public class UsersController(UserService service) : ControllerBase
         if (!currentUser.Admin) return Forbid("Current user not admin!");
         
         if (!service.IsLoginUnique(dto.Login))
-            return BadRequest("User with such login already exists!");
+            return Conflict("User with such login already exists!");
 
         var user = service.AddUser(dto, currentUser.Login);
         return CreatedAtAction(nameof(GetUserByLogin), new { login = user.Login }, "User created!");
@@ -120,16 +120,43 @@ public class UsersController(UserService service) : ControllerBase
         
         var user = service.Users.FirstOrDefault(u => u.Login == login);
         if (user == null) return NotFound("User not found!");
-        
-        if (data.Name is not null) user.Name = data.Name;
-        if (data.Login is not null)
+        var modified = false;
+        if (data.Name is not null)
         {
-            service.LogOut(user);
-            user.Login = data.Login;
+            user.Name = data.Name;
+            modified = true;
         }
-        if (data.Password is not null) service.SetPassword(user, data.Password);
-        if (data.Birthday is not null) user.Birthday = data.Birthday;
-        if (data.Gender.HasValue) user.Gender = data.Gender.Value;
+        if (data.Login is not null && user.Login != data.Login)
+        {
+            if (!service.IsLoginUnique(data.Login))
+                return Conflict("User with such login already exists!");
+                
+            service.LogOut(currentUser);
+            user.Login = data.Login;
+            modified = true;
+        }
+
+        if (data.Password is not null)
+        {
+            service.SetPassword(user, data.Password);
+            modified = true;
+        }
+
+        if (data.Birthday is not null)
+        {
+            user.Birthday = data.Birthday;
+            modified = true;
+        }
+
+        if (data.Gender.HasValue)
+        {
+            user.Gender = data.Gender.Value;
+            modified = true;
+        }
+
+        if (!modified) return Ok("No changes provided!");
+        user.ModifiedOn = DateTime.Now;
+        user.ModifiedBy = currentUser.Login;
         return Ok("User was updated!");
     }
     
@@ -156,16 +183,43 @@ public class UsersController(UserService service) : ControllerBase
         var currentUser = GetCurrentUser();
         if (currentUser is null) return Unauthorized("Current user not authorized!");
         if (currentUser.RevokedOn is not null) return Forbid("User revoked!");
-        
-        if (data.Name is not null) currentUser.Name = data.Name;
-        if (data.Login is not null)
+        var modified = false;
+        if (data.Name is not null)
         {
+            currentUser.Name = data.Name;
+            modified = true;
+        }
+        if (data.Login is not null && currentUser.Login != data.Login)
+        {
+            if (!service.IsLoginUnique(data.Login))
+                return Conflict("User with such login already exists!");
+                
             service.LogOut(currentUser);
             currentUser.Login = data.Login;
+            modified = true;
         }
-        if (data.Password is not null) service.SetPassword(currentUser, data.Password);
-        if (data.Birthday is not null) currentUser.Birthday = data.Birthday;
-        if (data.Gender.HasValue) currentUser.Gender = data.Gender.Value;
+
+        if (data.Password is not null)
+        {
+            service.SetPassword(currentUser, data.Password);
+            modified = true;
+        }
+
+        if (data.Birthday is not null)
+        {
+            currentUser.Birthday = data.Birthday;
+            modified = true;
+        }
+
+        if (data.Gender.HasValue)
+        {
+            currentUser.Gender = data.Gender.Value;
+            modified = true;
+        }
+
+        if (!modified) return Ok("No changes provided!");
+        currentUser.ModifiedOn = DateTime.Now;
+        currentUser.ModifiedBy = currentUser.Login;
         return Ok("User was updated!");
     }
 }
