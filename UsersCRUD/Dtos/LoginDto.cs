@@ -1,7 +1,11 @@
-﻿namespace UsersCRUD.Dtos;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace UsersCRUD.Dtos;
 
 public class LoginDto
 {
-    public string Login { get; set; } = "";
-    public string Password { get; set; } = "";
+    [Required]
+    public string Login { get; set; }
+    [Required]
+    public string Password { get; set; }
 }

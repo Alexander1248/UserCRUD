@@ -112,5 +112,3 @@ Authorization: Bearer {{token_user}}
 DELETE {{host}}/users/delete/test3?hard=true
 Content-Type: application/json
 Authorization: Bearer {{token}}
-
-
