@@ -42,6 +42,26 @@ public class UserService
         return user;
     }
     
+    public void DeleteUser(string login) => users.RemoveAll(x => x.Login == login);
+
+    public bool RevokeUser(string login, string revokedBy)
+    {
+        var user = users.FirstOrDefault(x => x.Login == login);
+        if (user == null) return false;
+        user.RevokedOn = DateTime.Now;
+        user.RevokedBy = revokedBy;
+        return true;
+    }
+    
+    public bool RestoreUser(string login)
+    {
+        var user = users.FirstOrDefault(x => x.Login == login);
+        if (user == null) return false;
+        user.RevokedOn = null;
+        user.RevokedBy = null;
+        return true;
+    }
+    
     public string? Authenticate(string login, string password)
     {
         var user = Users.FirstOrDefault(u => 

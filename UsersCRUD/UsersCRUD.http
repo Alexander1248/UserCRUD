@@ -1,4 +1,5 @@
 @host = http://localhost:5227
+@login = test1
 
 ### Авторизация (получение токена)
 # @name auth
@@ -13,17 +14,61 @@ Content-Type: application/json
 > {%
     client.global.set("token", response.body);
 %}
+
 ### Создание нового пользователя
 # @name create
-
 POST {{host}}/users/create
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "login": "test1",
+  "login": "{{login}}",
   "password":"12345",
   "name": "Test User",
   "gender": 0,
   "birthday": "2013-04-17T14:43:10.3398853Z"
 }
+
+### Список активных пользователей
+# @name active
+GET {{host}}/users/get/active
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Список пользователей старше 
+# @name older
+GET {{host}}/users/get/older?age=10
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Получить данные пользователя по логину
+# @name get by login
+GET {{host}}/users/get/{{login}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Получить данные текущего пользователя
+# @name get current
+GET {{host}}/users/get/current
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Получить данные текущего пользователя
+# @name delete user soft
+DELETE {{host}}/users/delete/{{login}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Получить данные текущего пользователя
+# @name restore user
+POST {{host}}/users/restore/{{login}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### Получить данные текущего пользователя
+# @name delete user hard
+DELETE {{host}}/users/delete/{{login}}?hard
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
